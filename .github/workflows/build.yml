@@ -44,15 +44,22 @@ jobs:
         zip -r electron-app.zip .
       working-directory: ./my-app
 
-    # Create a Git tag (using the version from package.json or commit hash)
-    - name: Create Git tag
+    # Create and push Git tag if it doesn't already exist
+    - name: Create and Push Git tag if not exists
       run: |
         VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
         TAG="v$VERSION"
-        git tag $TAG
-        git push origin $TAG  # Push the tag to the repository
+
+        # Check if the tag already exists remotely
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag $TAG already exists, skipping creation."
+        else
+          # Create and push the tag if it doesn't exist
+          git tag $TAG
+          git push origin $TAG
+        fi
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Pass the token explicitly (if needed)
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload ZIP to GitHub Releases
       uses: softprops/action-gh-release@v1
@@ -60,5 +67,3 @@ jobs:
         files: my-app/build/electron-app.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
