@@ -28,19 +28,27 @@ jobs:
 
     - name: Install dependencies
       run: npm install
-      working-directory: ./my-app  # Specify the directory where package.json is located
+      working-directory: ./my-app
 
     - name: Build the Electron app
       run: npm run make
-      working-directory: ./my-app  # Specify the directory again here for building
+      working-directory: ./my-app
 
     - name: Archive the build
       run: |
         mkdir build
         mv out/* build/
         cd build
-        zip -r electron-app.zip .  # Create a ZIP file of your app
-      working-directory: ./my-app  # Specify the directory here as well
+        zip -r electron-app.zip .
+      working-directory: ./my-app
+
+    # Create a Git tag (using the version from package.json or commit hash)
+    - name: Create Git tag
+      run: |
+        VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
+        TAG="v$VERSION"
+        git tag $TAG
+        git push origin $TAG
 
     - name: Upload ZIP to GitHub Releases
       uses: softprops/action-gh-release@v1
@@ -48,6 +56,3 @@ jobs:
         files: my-app/build/electron-app.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Clean up
-      run: rm -rf my-app/build  # Optional, remove temporary build directory
