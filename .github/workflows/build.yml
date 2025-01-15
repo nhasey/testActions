@@ -70,5 +70,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: my-app/build/electron-app.zip
+        tag_name: ${{ env.DATE }}.${{ env.REV }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
