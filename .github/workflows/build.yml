@@ -50,7 +50,7 @@ jobs:
         VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
         TAG="v$VERSION"
         git tag $TAG
-        git push origin $TAG
+        git push origin $TAG  # Push the tag to the repository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Pass the token explicitly (if needed)
 
@@ -60,4 +60,5 @@ jobs:
         files: my-app/build/electron-app.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
