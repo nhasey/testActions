@@ -44,19 +44,21 @@ jobs:
         zip -r electron-app.zip .
       working-directory: ./my-app
 
-    # Create and push Git tag if it doesn't already exist
-    - name: Create and Push Git tag if not exists
+    # Create and push Git tag if not exists
+    - name: Check if tag exists remotely and create if needed
       run: |
         VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
         TAG="v$VERSION"
 
-        # Check if the tag already exists remotely
-        if git rev-parse "$TAG" >/dev/null 2>&1; then
-          echo "Tag $TAG already exists, skipping creation."
-        else
-          # Create and push the tag if it doesn't exist
+        # Check if the tag exists remotely using GitHub API
+        TAG_EXISTS=$(curl -s https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$TAG)
+
+        if [[ "$TAG_EXISTS" == *"Not Found"* ]]; then
+          echo "Tag $TAG does not exist, creating and pushing the tag."
           git tag $TAG
           git push origin $TAG
+        else
+          echo "Tag $TAG already exists, skipping creation."
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
