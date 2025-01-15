@@ -3,7 +3,7 @@ name: Build and Publish Electron App
 on:
   push:
     branches:
-      - main  # You can change this to your preferred branch
+      - main  # Or your preferred branch
 
 jobs:
   build:
@@ -22,15 +22,17 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/my-app/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
     - name: Install dependencies
       run: npm install
+      working-directory: ./my-app  # Specify the directory where package.json is located
 
     - name: Build the Electron app
       run: npm run make
+      working-directory: ./my-app  # Specify the directory again here for building
 
     - name: Archive the build
       run: |
@@ -38,13 +40,14 @@ jobs:
         mv out/* build/
         cd build
         zip -r electron-app.zip .  # Create a ZIP file of your app
+      working-directory: ./my-app  # Specify the directory here as well
 
     - name: Upload ZIP to GitHub Releases
       uses: softprops/action-gh-release@v1
       with:
-        files: build/electron-app.zip
+        files: my-app/build/electron-app.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token to authenticate API requests
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Clean up
-      run: rm -rf build  # Optional, remove temporary build directory
+      run: rm -rf my-app/build  # Optional, remove temporary build directory
