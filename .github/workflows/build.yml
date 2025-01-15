@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: '16'  # Or your preferred Node.js version
 
@@ -28,8 +28,9 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/my-app/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
+
     - name: Install dependencies
-      run: npm install
+      run: npm ci
       working-directory: ./my-app
 
     - name: Build the Electron app
@@ -50,10 +51,8 @@ jobs:
         VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
         TAG="v$VERSION"
 
-        # Check if the tag exists remotely using GitHub API
-        TAG_EXISTS=$(curl -s https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$TAG)
-
-        if [[ "$TAG_EXISTS" == *"Not Found"* ]]; then
+        # Check if the tag exists remotely using GitHub CLI
+        if ! gh release view $TAG >/dev/null 2>&1; then
           echo "Tag $TAG does not exist, creating and pushing the tag."
           git tag $TAG
           git push origin $TAG
