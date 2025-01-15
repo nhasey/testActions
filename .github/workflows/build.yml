@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest  # Or windows-latest, depending on your environment
 
+    permissions:
+      contents: write  # Allow write access to the repository contents (necessary for pushing tags)
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -19,7 +22,7 @@ jobs:
         node-version: '16'  # Or your preferred Node.js version
 
     - name: Cache Node.js dependencies
-      uses: actions/cache@v3  # Updated to v3
+      uses: actions/cache@v3
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/my-app/package-lock.json') }}
@@ -48,9 +51,13 @@ jobs:
         TAG="v$VERSION"
         git tag $TAG
         git push origin $TAG
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Pass the token explicitly (if needed)
+
     - name: Upload ZIP to GitHub Releases
       uses: softprops/action-gh-release@v1
       with:
         files: my-app/build/electron-app.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
