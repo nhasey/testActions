@@ -46,19 +46,23 @@ jobs:
       working-directory: ./my-app
 
     # Create and push Git tag if not exists
-    - name: Check if tag exists remotely and create if needed
-      run: |
-        VERSION=$(jq -r .version ./my-app/package.json)  # Get version from package.json
-        TAG="v$VERSION"
+    - name: Get current date
+      id: date
+      run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-        # Check if the tag exists remotely using GitHub CLI
-        if ! gh release view $TAG >/dev/null 2>&1; then
-          echo "Tag $TAG does not exist, creating and pushing the tag."
-          git tag $TAG
-          git push origin $TAG
-        else
-          echo "Tag $TAG already exists, skipping creation."
-        fi
+    - name: Determine revision number
+      id: rev
+      run: |
+        TAG_PREFIX="${{ env.DATE }}"
+        REV_COUNT=$(git tag -l "${TAG_PREFIX}.*" | wc -l)
+        REV=$((REV_COUNT + 1))
+        echo "REV=${REV}" >> $GITHUB_ENV
+
+    - name: Create new tag
+      run: |
+        TAG="${{ env.DATE }}.${{ env.REV }}"
+        git tag $TAG
+        git push origin $TAG
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
